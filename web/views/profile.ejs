@@ -1,0 +1,34 @@
+<%- include("partials/header") %>
+
+<section class="page-head">
+  <p class="eyebrow">Кабінет</p>
+  <h1>Особистий кабінет</h1>
+  <p class="lead">Дані вашого облікового запису.</p>
+</section>
+
+<section class="split split-profile">
+  <article class="card profile-card">
+    <span class="avatar avatar-lg<%= user.role === "admin" ? " avatar-admin" : "" %>"><%= initials(user.name) %></span>
+    <h2><%= user.name %></h2>
+    <p class="muted"><%= user.email %></p>
+    <span class="tag<%= user.role === "admin" ? " tag-admin" : " tag-done" %>"><%= roleLabel(user.role) %></span>
+  </article>
+
+  <article class="card">
+    <h2>Дані облікового запису</h2>
+    <dl class="details">
+      <dt>Ім'я</dt>
+      <dd><%= user.name %></dd>
+      <dt>Email</dt>
+      <dd><%= user.email %></dd>
+      <dt>Роль</dt>
+      <dd><%= roleLabel(user.role) %></dd>
+      <dt>Дата реєстрації</dt>
+      <dd><%= formatDate(user.created_at) %></dd>
+      <dt>ID</dt>
+      <dd><%= user.id %></dd>
+    </dl>
+  </article>
+</section>
+
+<%- include("partials/footer") %>

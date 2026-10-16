@@ -1,0 +1,19 @@
+<%- include("partials/header") %>
+
+<section class="page-head">
+  <p class="eyebrow">Каталог</p>
+  <h1>Курси</h1>
+  <p class="lead">Усі курси школи. Демо-каталог для тестового завдання.</p>
+</section>
+
+<section class="course-grid">
+  <% courses.forEach((course) => { %>
+    <article class="course-card <%= trackClass(course.track) %>">
+      <span class="tag <%= trackClass(course.track) %>"><%= course.track %></span>
+      <h2><%= course.title %></h2>
+      <p class="muted">Уроків: <%= course.lessons %> · Тривалість: <%= course.weeks %> тиж.</p>
+    </article>
+  <% }) %>
+</section>
+
+<%- include("partials/footer") %>
