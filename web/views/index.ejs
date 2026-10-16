@@ -1,0 +1,74 @@
+<%- include("partials/header") %>
+
+<section class="page-head">
+  <p class="eyebrow">Огляд</p>
+  <h1>Тестовий сайт</h1>
+  <p class="lead">Навчальна платформа IT-школи: каталог курсів, особистий кабінет студента й адмін-панель.</p>
+</section>
+
+<section class="stats">
+  <article class="stat">
+    <span class="stat-label">Курсів</span>
+    <strong class="stat-value">—</strong>
+    <span class="stat-note">у каталозі школи</span>
+  </article>
+  <% if (user) { %>
+    <article class="stat">
+      <span class="stat-label">Ваші курси</span>
+      <strong class="stat-value">—</strong>
+      <span class="stat-note">курси, на які ви записані</span>
+    </article>
+  <% } else { %>
+    <article class="stat">
+      <span class="stat-label">Всі напрямки</span>
+      <strong class="stat-value stat-value-text"><%= tracks.join(" · ") %></strong>
+      <span class="stat-note">оберіть свій напрям навчання</span>
+    </article>
+  <% } %>
+  <article class="stat">
+    <span class="stat-label">Спільнота</span>
+    <strong class="stat-value">—</strong>
+    <span class="stat-note">студентів уже навчаються з нами</span>
+  </article>
+  <article class="stat">
+    <span class="stat-label">Ваш статус</span>
+    <strong class="stat-value"><%= user ? roleLabel(user.role) : "Гість" %></strong>
+    <span class="stat-note"><%= user ? "ви увійшли в обліковий запис" : "зареєструйтеся, щоб стати студентом" %></span>
+  </article>
+</section>
+
+<section class="split">
+  <article class="card card-flush">
+    <header class="card-head card-head-row">
+      <div>
+        <h2>Популярні курси</h2>
+        <p class="muted">Демо-каталог для тестового завдання.</p>
+      </div>
+      <a class="card-link" href="/courses">Усі курси →</a>
+    </header>
+    <ul class="rows">
+      <% popularCourses.forEach((course) => { %>
+        <li class="row">
+          <div>
+            <strong><%= course.title %></strong>
+            <span class="muted">Уроків: <%= course.lessons %> · Тривалість: <%= course.weeks %> тиж.</span>
+          </div>
+          <span class="tag <%= trackClass(course.track) %>"><%= course.track %></span>
+        </li>
+      <% }) %>
+    </ul>
+  </article>
+
+  <article class="card card-note">
+    <h2>Як протестувати сайт</h2>
+    <ol class="steps">
+      <li><strong>Зареєструватися</strong></li>
+      <li><strong>Відкрити кабінет</strong></li>
+      <li><strong>Відкрити /admin — доступ заборонено</strong></li>
+      <li><strong>Увійти як адмін</strong></li>
+      <li><strong>Адмінка</strong></li>
+    </ol>
+  </article>
+</section>
+
+<%- include("partials/footer") %>

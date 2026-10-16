@@ -1,0 +1,18 @@
+{
+  "name": "operator-bot",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.ts",
+    "typecheck": "tsc"
+  },
+  "dependencies": {
+    "better-sqlite3": "^13.0.3",
+    "grammy": "^1.46.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^9.6.0",
+    "@types/node": "^26.6.5",
+    "typescript": "^7.0.2"
+  }
+}

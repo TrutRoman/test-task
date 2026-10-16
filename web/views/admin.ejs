@@ -1,0 +1,68 @@
+<%- include("partials/header") %>
+
+<section class="page-head">
+  <p class="eyebrow">Адміністрування</p>
+  <h1>Адмін-панель</h1>
+  <p class="lead">Перегляд усіх зареєстрованих користувачів.</p>
+</section>
+
+<section class="stats">
+  <article class="stat">
+    <span class="stat-label">Усього</span>
+    <strong class="stat-value"><%= summary.total %></strong>
+    <span class="stat-note">облікових записів</span>
+  </article>
+  <article class="stat">
+    <span class="stat-label">Адміністратори</span>
+    <strong class="stat-value"><%= summary.admins %></strong>
+    <span class="stat-note">роль admin</span>
+  </article>
+  <article class="stat">
+    <span class="stat-label">Студенти</span>
+    <strong class="stat-value"><%= summary.regular %></strong>
+    <span class="stat-note">роль user</span>
+  </article>
+  <article class="stat">
+    <span class="stat-label">Нові</span>
+    <strong class="stat-value"><%= summary.newThisWeek %></strong>
+    <span class="stat-note">за останні 7 днів</span>
+  </article>
+</section>
+
+<section class="card card-flush">
+  <header class="card-head">
+    <h2>Користувачі</h2>
+    <p class="muted">Від найстаріших до найновіших.</p>
+  </header>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Ім'я</th>
+          <th>Email</th>
+          <th>Роль</th>
+          <th>Дата реєстрації</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% users.forEach((u) => { %>
+          <tr>
+            <td class="nowrap"><%= u.id %></td>
+            <td>
+              <span class="cell-user">
+                <span class="avatar avatar-sm<%= u.role === "admin" ? " avatar-admin" : "" %>"><%= initials(u.name) %></span>
+                <%= u.name %>
+              </span>
+            </td>
+            <td><%= u.email %></td>
+            <td class="nowrap"><span class="tag<%= u.role === "admin" ? " tag-admin" : " tag-done" %>"><%= roleLabel(u.role) %></span></td>
+            <td class="nowrap"><%= formatDate(u.created_at) %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<%- include("partials/footer") %>

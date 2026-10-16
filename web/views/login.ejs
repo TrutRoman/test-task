@@ -1,0 +1,40 @@
+<%- include("partials/header") %>
+
+<section class="page-head">
+  <p class="eyebrow">Обліковий запис</p>
+  <h1>Вхід</h1>
+  <p class="lead">Увійдіть, щоб відкрити особистий кабінет.</p>
+</section>
+
+<section class="split split-form">
+  <div class="card">
+    <% if (error) { %>
+      <p class="alert"><%= error %></p>
+    <% } %>
+
+    <form method="post" action="/login" class="form">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+      <label for="email">Email</label>
+      <input id="email" name="email" type="email" value="<%= email %>" required autocomplete="email">
+
+      <label for="password">Пароль</label>
+      <input id="password" name="password" type="password" required autocomplete="current-password">
+
+      <button type="submit" class="button">Увійти</button>
+    </form>
+
+    <p class="form-switch">Немає акаунта? <a href="/register">Зареєструватися</a></p>
+  </div>
+
+  <aside class="card card-soft">
+    <h2>Після входу</h2>
+    <ul class="checklist">
+      <li>Доступ до всіх курсів</li>
+      <li>Збереження вашого прогресу</li>
+      <li>Особистий кабінет студента</li>
+    </ul>
+  </aside>
+</section>
+
+<%- include("partials/footer") %>
