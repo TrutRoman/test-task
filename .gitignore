@@ -4,3 +4,4 @@ node_modules
 logs/
 .claude/
 CLAUDE.md
+*.blend1

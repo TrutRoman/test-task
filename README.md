@@ -1,17 +1,19 @@
-# Тестове завдання: Telegram-бот, сайт з авторизацією і Unity-гра
+# Тестове завдання: Telegram-бот, сайт з авторизацією, Unity-гра і 3D-модель
 
 | Папка | Що всередині |
 |---|---|
 | [`bot/`](bot) | Telegram-бот для зв'язку клієнта з оператором (TypeScript, grammY, long polling) |
 | [`web/`](web) | Сайт з реєстрацією, входом, кабінетом і адмін-панеллю (TypeScript, Express 5, EJS, SQLite) |
 | [`unity/`](unity) | Гра «Тестік гейм»: персонаж від третьої особи, меню паузи, збереження (Unity 6, URP) |
+| [`model/`](model) | Low-poly стілець: Python-скрипт для Blender, `chair.blend` і `chair.fbx` |
 
 ## Вимоги
 
 - Бот і сайт: **Node.js 24** або новіший. Node сам запускає `.ts`-файли (type stripping), тому збірка не потрібна. `tsc` використовується лише для перевірки типів. npm входить до складу Node.js.
 - Гра: **Unity 6000.6.2f1** через Unity Hub. Для збірки `.exe` потрібен модуль Windows Build Support (Mono), він входить у Windows-версію редактора.
+- Модель: **Blender 5.2**.
 
-Усі три проєкти незалежні. У бота й сайту свій `package.json`, свій `.env` і своє `npm install`.
+Проєкти незалежні. У бота й сайту свій `package.json`, свій `.env` і своє `npm install`.
 
 ---
 
@@ -212,7 +214,63 @@ $process = Start-Process $unity -PassThru -ArgumentList "-batchmode -quit -proje
 $process.WaitForExit(); "exit code: $($process.ExitCode)"
 ```
 
-Папка `unity/Builds/` є в `.gitignore`. Гра за замовчуванням відкривається на весь екран. У вікні її можна запустити так: `TestikGame.exe -screen-fullscreen 0 -screen-width 1280 -screen-height 720`. Журнал гри з помилками й винятками лежить у `%USERPROFILE%\AppData\LocalLow\DefaultCompany\Тестік гейм\Player.log`.
+Папка `unity/Builds/` є в `.gitignore`. До збірки потрапляють усі сцени з Build Settings, зокрема `CollisionTest` (див. частину 4); з меню гри вона не відкривається. Гра за замовчуванням відкривається на весь екран. У вікні її можна запустити так: `TestikGame.exe -screen-fullscreen 0 -screen-width 1280 -screen-height 720`. Журнал гри з помилками й винятками лежить у `%USERPROFILE%\AppData\LocalLow\DefaultCompany\Тестік гейм\Player.log`.
+
+---
+
+## 4. Модель стільця
+
+### Blender
+
+Стілець повністю будує скрипт [`model/make_chair.py`](model/make_chair.py). Запуск із кореня репозиторію (якщо `blender` немає в PATH, вкажіть повний шлях, наприклад `C:\Program Files\Blender Foundation\Blender 5.2\blender.exe`):
+
+```powershell
+blender -b --python-exit-code 1 -P model/make_chair.py
+```
+
+`--python-exit-code 1` потрібен, щоб помилка в скрипті давала код виходу 1: без нього Blender завершується з кодом 0 навіть після винятку.
+
+Що робить скрипт:
+
+- починає з порожньої сцени, одиниці — метри;
+- створює 6 окремих об'єктів: `Seat` (0,44 × 0,42 × 0,06 м, верх на висоті 0,45 м), `Back` (0,44 × 0,03 × 0,45 м, до висоти 0,90 м) і чотири ніжки `Leg_FrontLeft`, `Leg_FrontRight`, `Leg_BackLeft`, `Leg_BackRight` (0,04 × 0,04 × 0,39 м). Ліво й право — з погляду того, хто сидить на стільці;
+- застосовує масштаб, поворот і позицію (Apply All Transforms). Через це origin кожної деталі — центр основи стільця на підлозі;
+- додає Bevel (6 мм, 2 сегменти) і плоске затінення — low-poly вигляд, як у грі;
+- створює два матеріали Principled BSDF: `Wood` (ніжки й спинка) і `Fabric` (сидіння). Кольори скрипт читає просто з `unity/Assets/Scripts/Visual/Palette.cs`: Wood — той самий відтінок, що в огорожі й деревах гри, Fabric — рожевий Rose;
+- перевіряє розміри (висота 0,90 м, низ на z = 0) і зберігає `model/chair.blend` та `model/chair.fbx`.
+
+Параметри експорту FBX і чому вони такі:
+
+| Параметр | Значення | Навіщо |
+|---|---|---|
+| Forward / Up | `-Z` / `Y` | Переводить Z-up простір Blender у Y-up простір Unity |
+| Apply Transform (`bake_space_transform`) | увімкнено | Поворот осей записується в саму геометрію, тож у Unity в об'єктів немає зайвого повороту −90° по X. Опція позначена експериментальною лише для арматур і анімацій, а тут статичні меші |
+| Apply Scalings | `FBX All` | Unity імпортує 1 метр Blender як 1 метр зі scale 1, а не 100 |
+| Apply Modifiers | увімкнено | Bevel потрапляє у FBX, а в `.blend` лишається модифікатором |
+| Smoothing | `Face` | Грані лишаються пласкими |
+| Object Types | лише Mesh | Без камер і світла |
+
+### Unity
+
+**Tools → Setup Chair Test** (або `-executeMethod ChairTestBuilder.Setup` у batchmode, команда як у частині 3) робить усе з нуля:
+
+1. Копіює `model/chair.fbx` в `unity/Assets/Models/chair.fbx` і налаштовує імпорт: Scale Factor 1, Convert Units, без камер, світла, анімації й автоколайдерів.
+2. Створює матеріали URP/Lit `Chair Wood` і `Chair Fabric` з кольорами палітри та підставляє їх замість матеріалів з FBX.
+3. Перевіряє імпорт: у кожної деталі поворот (0, 0, 0) і масштаб 1, розмір стільця 0,44 × 0,90 × 0,42 м, низ на y = 0, стілець дивиться вздовж +Z. Якщо щось не так, скрипт зупиняється з помилкою.
+4. Створює префаб `Assets/Models/Chair.prefab` з окремим BoxCollider на сидінні, спинці й кожній ніжці.
+5. Створює сцену `Assets/Scenes/CollisionTest.unity`: підлога, стілець, 4 куби з Rigidbody над сидінням і персонаж із камерою. Персонаж — копія об'єкта `Player` зі сцени `Game` з тими самими компонентами (керування, анімація, звук кроків), без швидкого збереження, бо в тестовій сцені немає інтерфейсу. Сцена `Game` при цьому лише відкривається для читання й не зберігається.
+6. Додає `CollisionTest` у Build Settings.
+
+Сцени `MainMenu` і `Game` скрипт не змінює. Якщо перебудувати гру через **Tools → Build Test Scene**, згенеровані матеріали й меші персонажа створюються заново, тож після цього треба ще раз запустити **Tools → Setup Chair Test**.
+
+У сцені `CollisionTest` керування як у грі (WASD, Shift, Ctrl, Space, миша). Курсор захоплюється для огляду; Esc звільняє або знову захоплює його.
+
+### Why several BoxColliders instead of a MeshCollider
+
+- **The shape is already boxes.** Every chair part is a box with a 6 mm bevel, so one BoxCollider per part matches it within millimetres. The bevel triangles add nothing useful to collisions.
+- **Gaps stay open.** A convex MeshCollider would wrap the whole chair in one hull and turn the space under the seat and between the legs into a solid block. Separate boxes keep those gaps open: the character and the cubes collide with the real legs, seat and back.
+- **Cheaper and more stable.** Box contacts are the simplest case for the physics engine: they are computed analytically and do not jitter. A non-convex MeshCollider tests contacts against every triangle and cannot be used on a moving (non-kinematic) Rigidbody, so the chair could never become a physics object.
+- **Fast objects.** The falling cubes use `ContinuousDynamic` collision detection, so they do not pass through the 6 cm seat at high speed. Continuous detection is only supported for Rigidbodies with box, sphere or capsule colliders.
 
 ---
 
@@ -284,3 +342,13 @@ Get-Content web\logs\web.log -Wait -Tail 50
 8. Esc: гра зупиняється, фон затемнюється, курсор видно. «Завантажити збереження» повертає персонажа на збережене місце й продовжує гру. Якщо видалити `save.json`, при наступній паузі ця кнопка неактивна.
 9. «Налаштування»: повзунок гучності приглушує всю гру (на нулі тиша), повзунок чутливості змінює швидкість камери. Після перезапуску значення зберігаються.
 10. «Головне меню» повертає в меню, «Вийти» зупиняє Play Mode (у зібраній грі закриває її). Музика звучить безперервно, стик 30-секундної петлі не чути.
+
+### Стілець
+
+1. Відкрийте `model/chair.blend` у Blender 5.2: 6 окремих об'єктів (`Seat`, `Back`, чотири `Leg_…`), на кожному модифікатор Bevel, матеріали `Wood` і `Fabric`. Origin усіх деталей — у центрі основи на підлозі.
+2. За бажанням перезапустіть `blender -b --python-exit-code 1 -P model/make_chair.py`: у консолі з'являться розміри деталей, `chair bounds … z 0.000..0.900`, а `.blend` і `.fbx` перезапишуться.
+3. У відкритому Unity виконайте **Tools → Setup Chair Test** (або `ChairTestBuilder.Setup` у batchmode, коли редактор закритий). У консолі для кожної деталі має бути `rotation (0.00, 0.00, 0.00) scale (1.00, 1.00, 1.00)` і `whole chair size (0.440, 0.900, 0.420)`.
+4. Відкрийте префаб `Assets/Models/Chair.prefab`: на `Seat`, `Back` і кожній ніжці по одному BoxCollider, що збігається з деталлю.
+5. Відкрийте `Assets/Scenes/CollisionTest` і натисніть Play. Чотири куби падають і лишаються на сидінні.
+6. Підійдіть до стільця (WASD). Персонаж упирається в сидіння й ніжки й не проходить крізь них.
+7. Esc звільняє курсор, ще один Esc знову захоплює його.
